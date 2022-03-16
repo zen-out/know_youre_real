@@ -16,7 +16,7 @@ async function passwordToHash(password) {
         let hash = await bcrypt.hash(password, salt)
         return hash;
     } catch (error) {
-        return upset(error, "token.js", "should be able to get hash")
+        return upset("error" + error, "token.js", "should be able to get hash")
     }
 }
 

@@ -8,7 +8,7 @@
 - Difficult to integrate login and signup securely and convenient
 - Maybe check devices -> does the device match? 
 
-#### How to use - less than 10 steps in implementing authentication (given familiarity with pg and knex)
+##### How to use - less than 10 steps in implementing authentication (given familiarity with pg and knex)
 
 1. Create knex migrations with user and device table 
 Both user and device tables require these following values: 
@@ -135,7 +135,6 @@ axios.post(`/api/user/${id}/task`, object).then((response) => {
 <button onclick="kyr.confirm_logout('/signup')">Logout</button>
 
 
-```
 ## Instructions: 
 ```npm install know_youre_real ``` 
  ``` const kyr =  require('know_youre_real')```

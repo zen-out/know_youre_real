@@ -6,30 +6,40 @@ const when_you_free = require("when_you_free")
 const ef = require("effective_knex")
 const validate = require('validator');
 
-const knex = require("knex")({
-        client: "postgresql",
-        connection: {
-            database: "optee_test",
-            user: "postgres",
-            password: "postgres",
+async function updateLoggedIn(knex, user_id) {
+    try {
+        let currentStatus = await ef.getOneByKeyAndValue(knex, "user", "id", user_id)
+        see.should("change if already not logged in")
+        if (currentStatus["logged_in"] === true) {
+            see.should("if logged in is true, should return user")
+            see.is(currentStatus)
+            return currentStatus;
+        } else {
+            see.should("if false, should update")
+            let update = await ef.updateOne(knex, "user", user_id, "logged_in", false)
+            let changedUserToLoggedIn = await ef.getOneByKeyAndValue(knex, "user", "id", user_id)
+            see.is(changedUserToLoggedIn)
+            return changedUserToLoggedIn
         }
-    })
-    /**********************************************
-     * 
-     * ==================================
-     * - [ ] Finish login route 
-     ***********************************************/
-    // table.increments("id").primary();
-    // table.string("gmail_id");
-    // table.string("facebook_id");
-    // table.string("spotify_id");
-    // table.string("name");
-    // table.string("email").unique();
-    // table.boolean("verified");
-    // table.string("theme")
-    // table.string("hash");
-    // table.boolean("logged_in");
-    // table.timestamp("created").defaultTo(knex.fn.now());
+    } catch (error) { return upset("error: " + error, "know you're real, routes.js", "supposed to be able to verify user") }
+
+}
+/**********************************************
+ * 
+ * ==================================
+ * - [ ] Finish login route 
+ ***********************************************/
+// table.increments("id").primary();
+// table.string("gmail_id");
+// table.string("facebook_id");
+// table.string("spotify_id");
+// table.string("name");
+// table.string("email").unique();
+// table.boolean("verified");
+// table.string("theme")
+// table.string("hash");
+// table.boolean("logged_in");
+// table.timestamp("created").defaultTo(knex.fn.now());
 
 // table.increments("id").primary();
 //     table.integer("user_id").unsigned().references("user.id").onUpdate("CASCADE").onDelete("CASCADE")
@@ -64,30 +74,31 @@ function getDeviceInfo(req, object) {
  * @param {any}  object
  * @returns {any}
  */
-async function postDevice(knex, object) {
-    try {
-        let getThis = await knex("device").select("*").where({ user_id: object.user_id, type: object.type, device: object.device })
-        let date = Date.now()
-        let format = when_you_free.formatDateToPost(date)
-        if (getThis.length > 0) {
-            let obj = ef.getObject(getThis)
-            obj["last_login"] = format;
-            let update = await knex("device").update(obj).where({ id: obj.id })
-            let getOne = await knex("device").select("*").where({ id: obj.id })
-            let objectified = ef.getObject(getOne);
-            delete objectified["id"]
-            return objectified;
-        } else {
-            let postDevice = await ef.post(knex, "device", object)
-            let update = await knex("device").update({ last_login: format }).where({ id: postDevice.id })
-            let getOne = await knex("device").select("*").where({ id: postDevice.id })
-            let objectified = ef.getObject(getOne);
-            delete objectified["id"]
-            return objectified;
-        }
-    } catch (error) {
-        upset("post device error" + error, "know_youre_real", "should be able to post device")
+async function postDevice(knex, userObject) {
+    console.log("🚀 ~ file: routes.js ~ line 68 ~ postDevice ~ object", userObject)
+    let getThis = await knex("device").select("*").where({ user_id: userObject.user_id, type: userObject.type, device: userObject.device })
+    console.log("🚀 ~ file: routes.js ~ line 70 ~ postDevice ~ getThis", getThis)
+    let date = Date.now()
+    let getOne;
+    let objectified;
+    let update;
+    let obj;
+    let format = when_you_free.formatDateToPost(date)
+    if (getThis.length > 0) {
+        obj = ef.getObject(getThis)
+        obj["last_login"] = format;
+        update = await knex("device").update(obj).where({ id: obj.id })
+
+        getOne = await knex("device").select("*").where({ id: obj.id })
+        objectified = ef.getObject(getOne);
+    } else {
+        obj = await ef.post(knex, "device", userObject)
+        update = await knex("device").update({ last_login: format }).where({ id: obj.id })
+        getOne = await knex("device").select("*").where({ id: obj.id })
     }
+    objectified = ef.getObject(getOne);
+    delete objectified["id"]
+    return objectified;
 }
 
 /**
@@ -106,12 +117,10 @@ async function postDevice(knex, object) {
  */
 async function signup(req, knex, userObject) {
     try {
-        let obj = {}
-        obj["email"] = userObject.email
-        let cleanedObject = await ef.getByObject(knex, "user", "email", obj)
-        if (cleanedObject.length === 1) {
+        let user_array_from_db = await knex("user").select("*").where("email", userObject.email)
+        if (user_array_from_db.length === 1) {
             return upset("already a registered user", "already registered", "go to login page")
-        } else if (cleanedObject.length === 0) {
+        } else if (user_array_from_db.length === 0) {
             let getValidate = validate.isEmail(userObject.email)
             if (getValidate) {
                 let changePass = await passwordToHash(userObject.password)
@@ -122,20 +131,19 @@ async function signup(req, knex, userObject) {
                 userObject["device"] = req.device.parser.useragent.source;
                 userObject["type"] = req.device.type;
                 let getPost = await postDevice(knex, userObject)
-
                 let merged = extend(userObject, getPost)
                 delete merged["password"]
-
                 merged["id"] = postUser.id
                 return merged;
             } else {
                 return upset("not valid email", "in know_youre_real", "should be valid email")
             }
         } else {
-            return upset("how come we have more than one user email?", "routes", "should only have one object in array")
+            let getUpset = upset("how come we have more than one user email?", "routes", "should only have one object in array")
+            return getUpset;
         }
     } catch (error) {
-        return upset("error: " + error, "know you're real, routes.js", "supposed to be able to post user")
+        return upset("error: " + error, "know you're real, routes.js", "supposed to be able to signup user")
     }
 }
 /**
@@ -153,36 +161,32 @@ async function signup(req, knex, userObject) {
  */
 async function login(req, knex, userObject) {
     try {
-        let obj = {}
-        obj["email"] = userObject.email
-        let cleanedObject = await ef.getByObject(knex, "user", obj)
-        let getObject = await ef.getObject(cleanedObject)
-        if (cleanedObject.length === 1) {
-            let verifyPass = await hashToPassword(userObject.password, getObject.hash)
-            if (verifyPass) {
-                let updateLoggedIn = await ef.updateOne(knex, "user", getObject.id, "logged_in", true)
-                userObject["user_id"] = getObject.id
-                userObject["device"] = req.device.parser.useragent.source;
-                userObject["type"] = req.device.type;
-                let getPost = await postDevice(knex, userObject)
-                let merged = extend(userObject, getPost)
+        let user_object_from_db = await knex("user").select("*").where("email", userObject.email)
+        user_object_from_db = await ef.getObject(user_object_from_db)
+        if (user_object_from_db.id) {
+            let verifyPass = await hashToPassword(userObject.password, user_object_from_db.hash)
+            if (verifyPass === true) {
+                let loggedIn = await updateLoggedIn(knex, user_object_from_db.id)
+                loggedIn["user_id"] = loggedIn.id
+                loggedIn["device"] = req.device.parser.useragent.source;
+                loggedIn["type"] = req.device.type;
+                let getPost = await postDevice(knex, loggedIn)
+                let merged = extend(loggedIn, getPost)
                 delete merged["password"]
-                merged["id"] = getObject.id
+                merged["id"] = user_object_from_db.id
                 return merged;
             } else {
                 return upset("wrong password", "in know youre real", "try again")
             }
-        } else if (cleanedObject.length === 0) {
-            return upset("havent signed up yet", "in know_youre_real", "go to signup page")
         } else {
-            return upset("how come we have more than one user email?", "routes", "should only have one object in array")
+            return upset("havent signed up yet", "in know_youre_real", "go to signup page")
         }
     } catch (error) {
         return upset("error: " + error, "know you're real, routes.js", "supposed to be able to login user")
     }
-
-    // hash password 
 }
+
+// hash password 
 
 
 /**
@@ -197,20 +201,18 @@ async function login(req, knex, userObject) {
  * @param {any}  next
  * @returns {any}
  */
-async function verifyUserRoute(req, knex, user_id, dateSinceLastLogin) {
+async function verifyUserRoute(req, knex, user_id, dateSinceLastLogin = 14) {
     try {
+        user_id = parseInt(user_id)
         let deviceCheck;
         let loggedInCheck;
-        let cleanedObject = await ef.getOneByKeyAndValue(knex, "user", "id", user_id)
-        let getObject = await ef.getObject(cleanedObject)
-        if (getObject.email) {
-            let deviceObj = {}
-            deviceObj["user_id"] = getObject.id
-            deviceObj["device"] = req.device.parser.useragent.source;
-            deviceObj["type"] = req.device.type;
-            let getLastUpdate = await ef.getByObject(knex, "device", deviceObj)
-            let objectified = ef.getObject(getLastUpdate)
-            let merged = extend(getObject, objectified)
+        let cleanedObject = await knex("user").select("*").where("id", user_id)
+        cleanedObject = await ef.getObject(cleanedObject)
+        if (cleanedObject.id === user_id) {
+            let getDevice = await knex("device").select("*").where({ user_id: user_id })
+            getDevice = ef.getObject(getDevice)
+            let merged = extend(cleanedObject, getDevice)
+            console.log("🚀 ~ file: routes.js ~ line 215 ~ verifyUserRoute ~ merged", merged)
             deviceCheck = when_you_free.dateIsWithinLimit(merged.last_login, dateSinceLastLogin)
         }
         let updateLoggedIn = await ef.getOneByKeyAndValue(knex, "user", "id", user_id)
@@ -225,7 +227,6 @@ async function verifyUserRoute(req, knex, user_id, dateSinceLastLogin) {
     } catch (error) { return upset("error: " + error, "know you're real, routes.js", "supposed to be able to verify user") }
 }
 
-
 /**
  * @description 
  * 1. Checks if user is logged in 
@@ -237,7 +238,7 @@ async function verifyUserRoute(req, knex, user_id, dateSinceLastLogin) {
  * @param {any} user_id
  * @returns {any}
  */
-async function logout(user_id) {
+async function logout(knex, user_id) {
     try {
         let updateLoggedIn = await ef.getOneByKeyAndValue(knex, "user", "id", user_id)
         if (updateLoggedIn["logged_in"] === true) {
@@ -252,6 +253,14 @@ async function logout(user_id) {
 
 async function testHandlePost() {
 
+    const knex = require("knex")({
+        client: "postgresql",
+        connection: {
+            database: "optee_test",
+            user: "postgres",
+            password: "postgres",
+        }
+    })
     let sampleRequest = {
         device: {
             parser: {
@@ -264,28 +273,32 @@ async function testHandlePost() {
     }
     let sampleObject = {
         email: "lesleyc.2@gmail.com",
-        password: "hello"
+        password: "orangeorange"
     }
     let sampleObject2 = {
-        email: "lesle3yc2@gmail.com",
-        password: "orange"
-    }
-
-    let getUsers = await ef.getByKeyValue(knex, "user", "email", "lesleyc.2@gmail.com")
-    console.log("🚀 ~ file: routes.js ~ line 186 ~ testHandlePost ~ getUsers", getUsers)
-
-    let firstSignup = await signup(sampleRequest, knex, sampleObject)
-    console.log("🚀 ~ file: routes.js ~ line 210 ~ testHandlePost ~ firstSignup", firstSignup)
+            email: "lesle3yc2@gmail.com",
+            password: "orangeorange"
+        }
+        // let firstSignup = await signup(sampleRequest, knex, sampleObject)
+        // console.log("🚀 ~ file: routes.js ~ line 210 ~ testHandlePost ~ firstSignup", firstSignup)
     let firstLogin = await login(sampleRequest, knex, sampleObject)
     console.log("🚀 ~ file: routes.js ~ line 194 ~ testHandlePost ~ firstLogin", firstLogin)
-    let verify = await verifyUserRoute(sampleRequest, knex, 1)
+    let verify = await verifyUserRoute(sampleRequest, knex, firstLogin.id, 14)
     console.log("🚀 ~ file: routes.js ~ line 238 ~ testHandlePost ~ verify", verify)
-    let thenLogout = await logout(firstSignup.id)
-    console.log("🚀 ~ file: routes.js ~ line 284 ~ testHandlePost ~ thenLogout", thenLogout)
+        // let thenLogout = await logout(knex, firstLogin.id)
+        // console.log("🚀 ~ file: routes.js ~ line 284 ~ testHandlePost ~ thenLogout", thenLogout)
 
 }
 
 async function reset() {
+    const knex = require("knex")({
+        client: "postgresql",
+        connection: {
+            database: "optee_test",
+            user: "postgres",
+            password: "postgres",
+        }
+    })
     let remove1 = await knex("device").select("*").del()
     console.log(remove1)
     let remove = await knex("user").select("*").del()
