@@ -5,7 +5,7 @@ const { see, hourglass } = require("code_clarity")
 const when_you_free = require("when_you_free")
 const ef = require("effective_knex")
 const validate = require('validator');
-
+const make_legit = require("make_legit")
 async function updateLoggedIn(knex, user_id) {
     try {
         let currentStatus = await ef.getOneByKeyAndValue(knex, "user", "id", user_id)
@@ -75,9 +75,7 @@ function getDeviceInfo(req, object) {
  * @returns {any}
  */
 async function postDevice(knex, userObject) {
-    console.log("🚀 ~ file: routes.js ~ line 68 ~ postDevice ~ object", userObject)
     let getThis = await knex("device").select("*").where({ user_id: userObject.user_id, type: userObject.type, device: userObject.device })
-    console.log("🚀 ~ file: routes.js ~ line 70 ~ postDevice ~ getThis", getThis)
     let date = Date.now()
     let getOne;
     let objectified;
@@ -134,7 +132,7 @@ async function signup(req, knex, userObject) {
                 let merged = extend(userObject, getPost)
                 delete merged["password"]
                 merged["id"] = postUser.id
-                return merged;
+                return make_legit.trimObj(merged);
             } else {
                 return upset("not valid email", "in know_youre_real", "should be valid email")
             }
@@ -174,7 +172,7 @@ async function login(req, knex, userObject) {
                 let merged = extend(loggedIn, getPost)
                 delete merged["password"]
                 merged["id"] = user_object_from_db.id
-                return merged;
+                return make_legit.trimObj(merged);
             } else {
                 return upset("wrong password", "in know youre real", "try again")
             }
@@ -212,7 +210,6 @@ async function verifyUserRoute(req, knex, user_id, dateSinceLastLogin = 14) {
             let getDevice = await knex("device").select("*").where({ user_id: user_id })
             getDevice = ef.getObject(getDevice)
             let merged = extend(cleanedObject, getDevice)
-            console.log("🚀 ~ file: routes.js ~ line 215 ~ verifyUserRoute ~ merged", merged)
             deviceCheck = when_you_free.dateIsWithinLimit(merged.last_login, dateSinceLastLogin)
         }
         let updateLoggedIn = await ef.getOneByKeyAndValue(knex, "user", "id", user_id)
@@ -280,13 +277,13 @@ async function testHandlePost() {
             password: "orangeorange"
         }
         // let firstSignup = await signup(sampleRequest, knex, sampleObject)
-        // console.log("🚀 ~ file: routes.js ~ line 210 ~ testHandlePost ~ firstSignup", firstSignup)
+        // see.done("signup", firstSignup)
     let firstLogin = await login(sampleRequest, knex, sampleObject)
-    console.log("🚀 ~ file: routes.js ~ line 194 ~ testHandlePost ~ firstLogin", firstLogin)
+    see.done("login", firstLogin)
     let verify = await verifyUserRoute(sampleRequest, knex, firstLogin.id, 14)
-    console.log("🚀 ~ file: routes.js ~ line 238 ~ testHandlePost ~ verify", verify)
-        // let thenLogout = await logout(knex, firstLogin.id)
-        // console.log("🚀 ~ file: routes.js ~ line 284 ~ testHandlePost ~ thenLogout", thenLogout)
+    see.done("verify route" + verify)
+    let thenLogout = await logout(knex, firstLogin.id)
+    see.done("logout", thenLogout)
 
 }
 

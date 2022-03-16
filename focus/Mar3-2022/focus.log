@@ -27,3 +27,4 @@
 {"level":"is","message":"boolean","timestamp":"2022-03-16T14:47:08.183Z"}
 {"level":"is","message":"boolean","timestamp":"2022-03-16T14:47:08.184Z"}
 {"level":"is","message":{"created":"2022-03-16T15:48:50.974Z","email":"lesleyc.2@gmail.com","hash":"$2b$10$hxrLALBoXTTdn9Ut6PbyMuGbtfNwYFqiNlbmcK8k81CA5sVr0NHky","id":3,"logged_in":true},"timestamp":"2022-03-16T15:49:43.986Z"}
+{"level":"is","message":{"created":"2022-03-16T15:48:50.974Z","email":"lesleyc.2@gmail.com","hash":"$2b$10$hxrLALBoXTTdn9Ut6PbyMuGbtfNwYFqiNlbmcK8k81CA5sVr0NHky","id":3,"logged_in":true},"timestamp":"2022-03-16T15:57:20.121Z"}
