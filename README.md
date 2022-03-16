@@ -134,7 +134,46 @@ axios.post(`/api/user/${id}/task`, object).then((response) => {
 9. Redirect to another page after logout 
 <button onclick="kyr.confirm_logout('/signup')">Logout</button>
 
+#### Example
 
+```js
+  let sampleObject = {
+        email: "lesleyc.2@gmail.com",
+        password: "testtest"
+    }
+        let firstSignup = await signup(sampleRequest, knex, sampleObject)
+        console.log("🚀 ~ file: routes.js ~ line 210 ~ testHandlePost ~ firstSignup", firstSignup)
+    let firstLogin = await login(sampleRequest, knex, sampleObject)
+    console.log("🚀 ~ file: routes.js ~ line 194 ~ testHandlePost ~ firstLogin", firstLogin)
+    let verify = await verifyUserRoute(sampleRequest, knex, firstLogin.id, 14)
+    console.log("🚀 ~ file: routes.js ~ line 238 ~ testHandlePost ~ verify", verify)
+        let thenLogout = await logout(knex, firstLogin.id)
+        console.log("🚀 ~ file: routes.js ~ line 284 ~ testHandlePost ~ thenLogout", thenLogout)
+```
+### Frontend
+```js
+
+    <script src="./node_modules/know_youre_real/dist/frontend.js"></script>
+    <script>
+        $(() => {
+            $(".signup").click(function(event) {
+
+                let user = confirm_signup_login({
+                    id: 4,
+                    email: "whatsup"
+                }, "/")
+                console.log(user)
+            })
+            $(".verify").click(function(event) {
+                let verify = verify_local_storage()
+                console.log(verify)
+            })
+            $(".logout").click(function(event) {
+                confirm_logout("/")
+            })
+        })
+    </script>
+```
 ## Instructions: 
 ```npm install know_youre_real ``` 
  ``` const kyr =  require('know_youre_real')```
@@ -180,7 +219,7 @@ axios.post(`/api/user/${id}/task`, object).then((response) => {
 <li>Checks if user is logged in</li>
 </ol>
 </dd>
-<dt><a href="#logout">logout(user_id)</a> ⇒ <code>any</code></dt>
+<dt><a href="#logout">logout(knex, user_id)</a> ⇒ <code>any</code></dt>
 <dd><ol>
 <li>Checks if user is logged in </li>
 <li>If they are, change logged in to false</li>
@@ -311,11 +350,12 @@ let firstSignup = await signup(sampleRequest, knex, sampleObject)
 
 | Param | Type |
 | --- | --- |
+| knex | <code>database</code> | 
 | user_id | <code>any</code> | 
 
 **Example**  
 ```js
-let thenLogout = await logout(1) // returns true or false; 
+let thenLogout = await logout(knex, 1) // returns true or false; 
 ```
 
 
