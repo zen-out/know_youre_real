@@ -1,6 +1,7 @@
 const make_legit = require("./index.js")
 let shouldBeString = make_legit.format(3, "string")
 console.log("🚀 ~ file: playground.js ~ line 3 ~ shouldBeString", shouldBeString)
+console.log(typeof shouldBeString)
 let shouldBeString2 = make_legit.format({ "start": 2, "edit": 3, "end": 4 }, "string")
 console.log("🚀 ~ file: playground.js ~ line 5 ~ shouldBeString2", shouldBeString2)
 let shouldBeString3 = make_legit.format([2, 3, 4], "string")
@@ -21,6 +22,8 @@ let trimObj = make_legit.trimObj({ test: "asdfasdf asdf ", whatsup: undefined, n
 console.log("🚀 ~ file: playground.js ~ line 13 ~ trimObj", trimObj)
 let trimArr = make_legit.trimArr([{ test: "asdfasdf asdf ", whatsup: undefined, no: null }, { test: "asdfasdf asdf ", whatsup: undefined, no: null }])
 
+let dates = make_legit.format("2020-02-02", "date")
+console.log(dates)
 
 let getType = make_legit.getType([])
 let getObject = make_legit.getType({ test: "whatsup" })
@@ -30,3 +33,5 @@ let getDate = make_legit.getType("Dec 11 2022")
 let getDate2 = make_legit.getType(new Date())
 console.log("🚀 ~ file: playground.js ~ line 19 ~ getDate2", getDate2)
 console.log(getDate)
+
+console.log(make_legit.format("Dec 11, 1994", "date"))

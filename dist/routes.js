@@ -114,34 +114,30 @@ async function postDevice(knex, userObject) {
  * @returns {any}
  */
 async function signup(req, knex, userObject) {
-    try {
-        let user_array_from_db = await knex("user").select("*").where("email", userObject.email)
-        if (user_array_from_db.length === 1) {
-            return upset("already a registered user", "already registered", "go to login page")
-        } else if (user_array_from_db.length === 0) {
-            let getValidate = validate.isEmail(userObject.email)
-            if (getValidate) {
-                let changePass = await passwordToHash(userObject.password)
-                userObject["hash"] = changePass;
-                userObject["logged_in"] = true;
-                let postUser = await ef.post(knex, "user", userObject)
-                userObject["user_id"] = postUser.id
-                userObject["device"] = req.device.parser.useragent.source;
-                userObject["type"] = req.device.type;
-                let getPost = await postDevice(knex, userObject)
-                let merged = extend(userObject, getPost)
-                delete merged["password"]
-                merged["id"] = postUser.id
-                return make_legit.trimObj(merged);
-            } else {
-                return upset("not valid email", "in know_youre_real", "should be valid email")
-            }
+    let user_array_from_db = await knex("user").select("*").where("email", userObject.email)
+    if (user_array_from_db.length === 1) {
+        return upset("already a registered user", "already registered", "go to login page")
+    } else if (user_array_from_db.length === 0) {
+        let getValidate = validate.isEmail(userObject.email)
+        if (getValidate) {
+            let changePass = await passwordToHash(userObject.password)
+            userObject["hash"] = changePass;
+            userObject["logged_in"] = true;
+            let postUser = await ef.post(knex, "user", userObject)
+            userObject["user_id"] = postUser.id
+            userObject["device"] = req.device.parser.useragent.source;
+            userObject["type"] = req.device.type;
+            let getPost = await postDevice(knex, userObject)
+            let merged = extend(userObject, getPost)
+            delete merged["password"]
+            merged["id"] = postUser.id
+            return make_legit.trimObj(merged);
         } else {
-            let getUpset = upset("how come we have more than one user email?", "routes", "should only have one object in array")
-            return getUpset;
+            return upset("not valid email", "in know_youre_real", "should be valid email")
         }
-    } catch (error) {
-        return upset("error: " + error, "know you're real, routes.js", "supposed to be able to signup user")
+    } else {
+        let getUpset = upset("how come we have more than one user email?", "routes", "should only have one object in array")
+        return getUpset;
     }
 }
 /**
