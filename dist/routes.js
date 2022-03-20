@@ -285,7 +285,7 @@ async function testHandlePost() {
 
 }
 
-testHandlePost()
+// testHandlePost()
 
 async function reset() {
     const knex = require("knex")({
