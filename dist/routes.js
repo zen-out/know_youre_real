@@ -130,8 +130,8 @@ async function signup(req, knex, userObject) {
             let getPost = await postDevice(knex, userObject)
             let merged = extend(userObject, getPost)
             delete merged["password"]
-            merged["id"] = postUser.id
-            return make_legit.trimObj(merged);
+            merged["id"] = postUser.id;
+            return merged;
         } else {
             return upset("not valid email", "in know_youre_real", "should be valid email")
         }
@@ -168,7 +168,7 @@ async function login(req, knex, userObject) {
                 let merged = extend(loggedIn, getPost)
                 delete merged["password"]
                 merged["id"] = user_object_from_db.id
-                return make_legit.trimObj(merged);
+                return merged;
             } else {
                 return upset("wrong password", "in know youre real", "try again")
             }
