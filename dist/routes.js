@@ -81,7 +81,7 @@ async function postDevice(knex, userObject) {
     let objectified;
     let update;
     let obj;
-    let format = when_you_free.formatDateToPost(date)
+    let format = new Date()
     if (getThis.length > 0) {
         obj = ef.getObject(getThis)
         obj["last_login"] = format;
@@ -206,6 +206,8 @@ async function verifyUserRoute(req, knex, user_id, dateSinceLastLogin = 14) {
             let getDevice = await knex("device").select("*").where({ user_id: user_id })
             getDevice = ef.getObject(getDevice)
             let merged = extend(cleanedObject, getDevice)
+            let checKLastLoggedIn = new Date(merged.last_login)
+
             deviceCheck = when_you_free.dateIsWithinLimit(merged.last_login, dateSinceLastLogin)
         }
         let updateLoggedIn = await ef.getOneByKeyAndValue(knex, "user", "id", user_id)
@@ -265,7 +267,7 @@ async function testHandlePost() {
         }
     }
     let sampleObject = {
-        email: "lesleyc.2@gmail.com",
+        email: "lesleyc.2@gmdail.com",
         password: "orangeorange"
     }
     let sampleObject2 = {
@@ -278,10 +280,12 @@ async function testHandlePost() {
     see.done("login", firstLogin)
     let verify = await verifyUserRoute(sampleRequest, knex, firstLogin.id, 14)
     see.done("verify route" + verify)
-    let thenLogout = await logout(knex, firstLogin.id)
-    see.done("logout", thenLogout)
+        // let thenLogout = await logout(knex, firstLogin.id)
+        // see.done("logout", thenLogout)
 
 }
+
+testHandlePost()
 
 async function reset() {
     const knex = require("knex")({
